@@ -47,7 +47,8 @@
         "sock_shutdown": "hostcall_wasi_snapshot_preview1_sock_shutdown",
 
         "fence": "hostcall_wasi_snapshot_preview1_fence",
-        "clflush": "hostcall_wasi_snapshot_preview1_clflush"
+        "clflush": "hostcall_wasi_snapshot_preview1_clflush",
+        "rdtsc": "hostcall_wasi_snapshot_preview1_rdtsc"
     },
     "wasi_snapshot_preview1": {
         "args_get": "hostcall_wasi_snapshot_preview1_args_get",
@@ -97,6 +98,7 @@
         "sock_shutdown": "hostcall_wasi_snapshot_preview1_sock_shutdown",
 
         "fence": "hostcall_wasi_snapshot_preview1_fence",
-        "clflush": "hostcall_wasi_snapshot_preview1_clflush"
+        "clflush": "hostcall_wasi_snapshot_preview1_clflush",
+        "rdtsc": "hostcall_wasi_snapshot_preview1_rdtsc"
     }
 }
