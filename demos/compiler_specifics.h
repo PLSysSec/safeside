@@ -19,6 +19,8 @@
 #elif defined(__powerpc64__) || defined(__PPC64__) || defined(__powerpc__) || \
     defined(__ppc__) || defined(__PPC__)
 #define SAFESIDE_PPC 1
+#elif defined(__wasi__)
+#define SAFESIDE_WASM 1
 #else
 #  error Undefined architecture.
 #endif

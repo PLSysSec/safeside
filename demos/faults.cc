@@ -9,6 +9,10 @@
 
 #include "faults.h"
 
+#if SAFESIDE_WASM
+// This file not supported
+#else
+
 #include <setjmp.h>
 
 #include <cstring>
@@ -49,3 +53,5 @@ bool RunWithFaultHandler(int fault_signum, std::function<void()> inner) {
 
   return handled_fault;
 }
+
+#endif  // SAFESIDE_WASM

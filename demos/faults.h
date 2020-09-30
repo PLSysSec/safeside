@@ -10,6 +10,10 @@
 #ifndef DEMOS_FAULTS_H_
 #define DEMOS_FAULTS_H_
 
+#if SAFESIDE_WASM
+// this file not supported
+#else
+
 #include <signal.h>
 
 #include <functional>
@@ -24,5 +28,7 @@
 //
 // Returns true iff a signal was handled.
 bool RunWithFaultHandler(int fault_signum, std::function<void()> inner);
+
+#endif  // SAFESIDE_WASM
 
 #endif  // DEMOS_FAULTS_H_

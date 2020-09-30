@@ -24,6 +24,8 @@
 // No headers for ARM.
 #elif SAFESIDE_PPC
 // No headers for PowerPC.
+#elif SAFESIDE_WASM
+#include <stdlib.h>
 #else
 #  error Unsupported CPU.
 #endif  // SAFESIDE_IA32
@@ -92,6 +94,9 @@ void UnwindStackAndSlowlyReturnTo(const void *address) {
       "sync\n"
       "mtlr %0\n"
       "blr\n"::"r"(address));
+#elif SAFESIDE_WASM
+  // not implemented yet
+  exit(1);
 #else
 #  error Unsupported CPU.
 #endif

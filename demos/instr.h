@@ -32,6 +32,8 @@
 #  include "instr_aarch64.h"
 #elif SAFESIDE_PPC
 #  include "instr_ppc64le.h"
+#elif SAFESIDE_WASM
+#  include "instr_wasm.h"
 #endif
 
 // Full memory and speculation barrier, as described in docs/fencing.md.
