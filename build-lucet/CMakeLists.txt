@@ -30,31 +30,39 @@ set(CMAKE_CXX_FLAGS
 set(CMAKE_C_LINK_FLAGS "")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all")
 
-add_executable(safeside.wasm
-  ${safeside_SOURCE_DIR}/demos/cache_sidechannel.cc
-  ${safeside_SOURCE_DIR}/demos/instr.cc
-  ${safeside_SOURCE_DIR}/demos/timing_array.cc
-  ${safeside_SOURCE_DIR}/demos/utils.cc
-  #${safeside_SOURCE_DIR}/demos/faults.cc
-  ${safeside_SOURCE_DIR}/demos/asm/measurereadlatency_wasm.c
-  ${safeside_SOURCE_DIR}/demos/spectre_v1_pht_sa.cc)
+set(TARGETS spectre_v1_pht_sa ret2spec_sa)
+set(TARGETS_SO spectre_v1_pht_sa.so ret2spec_sa.so) # I can't figure out how to automate this in CMake
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(DYLIB_EXT "dylib")
 else()
   set(DYLIB_EXT "so")
 endif()
-set(SAFESIDE_LIB_PATH "${CMAKE_BINARY_DIR}/safeside_lib_lucet.${DYLIB_EXT}")
 
-add_custom_command(OUTPUT ${SAFESIDE_LIB_PATH}
-                   DEPENDS safeside.wasm
-                   COMMAND ${LUCETC}
-                           --bindings ${WASI_BINDINGS_JSON}
-                           --guard-size "4GiB"
-                           --min-reserved-size "4GiB"
-                           --max-reserved-size "4GiB"
-                           safeside.wasm
-                           -o ${SAFESIDE_LIB_PATH}
-                   COMMENT "Compiling wasm file to native")
+FOREACH(TARGET ${TARGETS})
 
-add_custom_target(safeside_lib_so ALL DEPENDS ${SAFESIDE_LIB_PATH})
+  add_executable(${TARGET}.wasm
+    ${safeside_SOURCE_DIR}/demos/cache_sidechannel.cc
+    ${safeside_SOURCE_DIR}/demos/instr.cc
+    ${safeside_SOURCE_DIR}/demos/timing_array.cc
+    ${safeside_SOURCE_DIR}/demos/utils.cc
+    #${safeside_SOURCE_DIR}/demos/faults.cc
+    ${safeside_SOURCE_DIR}/demos/asm/measurereadlatency_wasm.c
+    ${safeside_SOURCE_DIR}/demos/ret2spec_common.cc
+    ${safeside_SOURCE_DIR}/demos/${TARGET}.cc)
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             --bindings ${WASI_BINDINGS_JSON}
+                             --guard-size "4GiB"
+                             --min-reserved-size "4GiB"
+                             --max-reserved-size "4GiB"
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native")
+
+ENDFOREACH(TARGET)
+
+add_custom_target(all_targets ALL DEPENDS ${TARGETS_SO})
+
