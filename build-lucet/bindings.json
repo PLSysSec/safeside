@@ -48,7 +48,8 @@
 
         "fence": "hostcall_wasi_snapshot_preview1_fence",
         "clflush": "hostcall_wasi_snapshot_preview1_clflush",
-        "rdtsc": "hostcall_wasi_snapshot_preview1_rdtsc"
+        "rdtsc": "hostcall_wasi_snapshot_preview1_rdtsc",
+        "get_host_stack_ptr": "hostcall_wasi_snapshot_preview1_get_host_stack_ptr"
     },
     "wasi_snapshot_preview1": {
         "args_get": "hostcall_wasi_snapshot_preview1_args_get",
@@ -99,6 +100,7 @@
 
         "fence": "hostcall_wasi_snapshot_preview1_fence",
         "clflush": "hostcall_wasi_snapshot_preview1_clflush",
-        "rdtsc": "hostcall_wasi_snapshot_preview1_rdtsc"
+        "rdtsc": "hostcall_wasi_snapshot_preview1_rdtsc",
+        "get_host_stack_ptr": "hostcall_wasi_snapshot_preview1_get_host_stack_ptr"
     }
 }
