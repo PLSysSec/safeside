@@ -43,12 +43,20 @@ void MemoryAndSpeculationBarrier();
 // Flush the cache line containing the given address from all levels of the
 // cache hierarchy. For split cache levels, `address` is flushed from dcache.
 // Implementation in instr_*.h.
-void FlushDataCacheLineNoBarrier(const void *address);
-void FlushDataCacheLineNoBarrier64(uint64_t address);
+//
+// For Wasm target, this expects a "guest" address (linear memory index)
+void FlushDataCacheLineNoBarrier_GuestAddr(const void *address);
+
+// Same, but for Wasm target, this expects a "host" address
+void FlushDataCacheLineNoBarrier_HostAddr(uint64_t address);
 
 // Convenience wrapper to flush and wait.
-inline void FlushDataCacheLine(void *address) {
-  FlushDataCacheLineNoBarrier(address);
+inline void FlushDataCacheLine_GuestAddr(void *address) {
+  FlushDataCacheLineNoBarrier_GuestAddr(address);
+  MemoryAndSpeculationBarrier();
+}
+inline void FlushDataCacheLine_HostAddr(uint64_t address) {
+  FlushDataCacheLineNoBarrier_HostAddr(address);
   MemoryAndSpeculationBarrier();
 }
 

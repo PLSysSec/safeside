@@ -25,7 +25,7 @@ namespace {
 
 // Returns the address of the first byte of the cache line *after* the one on
 // which `addr` falls.
-const void* StartOfNextCacheLine(const void* addr) {
+const void* StartOfNextCacheLine_GuestAddr(const void* addr) {
   auto addr_n = reinterpret_cast<uintptr_t>(addr);
 
   // Create an address on the next cache line, then mask it to round it down to
@@ -36,7 +36,7 @@ const void* StartOfNextCacheLine(const void* addr) {
 
 // Returns the address of the first byte of the cache line *after* the one on
 // which `addr` falls.
-uint64_t StartOfNextCacheLine64(uint64_t addr) {
+uint64_t StartOfNextCacheLine_HostAddr(uint64_t addr) {
   auto addr_n = addr;
 
   // Create an address on the next cache line, then mask it to round it down to
@@ -47,17 +47,16 @@ uint64_t StartOfNextCacheLine64(uint64_t addr) {
 
 }  // namespace
 
-void FlushFromDataCache(const void *begin, const void *end) {
-  for (; begin < end; begin = StartOfNextCacheLine(begin)) {
-    FlushDataCacheLineNoBarrier(begin);
+void FlushFromDataCache_GuestAddr(const void *begin, const void *end) {
+  for (; begin < end; begin = StartOfNextCacheLine_GuestAddr(begin)) {
+    FlushDataCacheLineNoBarrier_GuestAddr(begin);
   }
   MemoryAndSpeculationBarrier();
 }
 
-
-void FlushFromDataCache64(uint64_t begin, uint64_t end) {
-  for (; begin < end; begin = StartOfNextCacheLine64(begin)) {
-    FlushDataCacheLineNoBarrier64(begin);
+void FlushFromDataCache_HostAddr(uint64_t begin, uint64_t end) {
+  for (; begin < end; begin = StartOfNextCacheLine_HostAddr(begin)) {
+    FlushDataCacheLineNoBarrier_HostAddr(begin);
   }
   MemoryAndSpeculationBarrier();
 }
@@ -74,7 +73,7 @@ void ExtendSpeculationWindow() {
   static char buffer[3 * kPageBytes] = {0};
   const char* read_offset = &buffer[kPageBytes];
 
-  FlushFromDataCache(read_offset, read_offset + 1);
+  FlushFromDataCache_GuestAddr(read_offset, read_offset + 1);
   ForceRead(read_offset);
 }
 

@@ -39,7 +39,7 @@ void CacheSideChannel::FlushOracle() const {
   // speculative execution, that will warm the cache for that entry, which
   // can be detected later via timing analysis.
   for (BigByte &b : padded_oracle_array_->oracles_) {
-    FlushDataCacheLineNoBarrier(&b);
+    FlushDataCacheLineNoBarrier_GuestAddr(&b);
   }
   MemoryAndSpeculationBarrier();
 }

@@ -36,18 +36,16 @@ bool false_value = false;
 // from the cache.
 std::vector<uint64_t> stack_mark_pointers;
 
+#ifdef SAFESIDE_WASM
 // Get a pointer to somewhere in the current stack frame
 static inline SAFESIDE_ALWAYS_INLINE uint64_t getWasmStackPtr() {
-#ifdef SAFESIDE_WASM
   // on Wasm platforms, we use __wasi_get_host_stack_ptr (which provides a host
   // stack pointer directly, simulating the ability to leak one)
   uint64_t stack_ptr;
   (void)__wasi_get_host_stack_ptr(&stack_ptr);
   return stack_ptr;
-#else
-  return 0;
-#endif
 }
+#endif
 
 // Always returns false.
 bool ReturnsFalse(int counter) {
@@ -101,7 +99,7 @@ static bool ReturnsTrue(int counter) {
   // own stack mark and the next one. Somewhere there must be also the return
   // address.
   stack_mark_pointers.pop_back();
-  FlushFromDataCache64(stack_ptr, stack_mark_pointers.back());
+  FlushFromDataCache_HostAddr(stack_ptr, stack_mark_pointers.back());
   return true;
 }
 

@@ -28,11 +28,10 @@ inline SAFESIDE_ALWAYS_INLINE void MemoryAndSpeculationBarrier() {
   _mm_lfence();
 }
 
-inline void FlushDataCacheLineNoBarrier(const void *address) {
+inline void FlushDataCacheLineNoBarrier_GuestAddr(const void *address) {
   _mm_clflush(address);
 }
-
-inline void FlushDataCacheLineNoBarrier64(uint64_t address) {
+inline void FlushDataCacheLineNoBarrier_HostAddr(uint64_t address) {
   _mm_clflush(reinterpret_cast<const void*>(address));
 }
 

@@ -68,8 +68,8 @@ static char LeakByte(const char *data, size_t offset) {
               i - local_pointer_index);
 
       // We always flush the pointer, so that its access is slower.
-      FlushDataCacheLine(&(*array_of_pointers)[i]);
-      FlushDataCacheLine(array_of_pointers.get());
+      FlushDataCacheLine_GuestAddr(&(*array_of_pointers)[i]);
+      FlushDataCacheLine_GuestAddr(array_of_pointers.get());
 
       // When i is at the local_pointer_index, we slowly copy safe_offset into
       // the local_offset. Otherwise we just copy the safe_offset to junk. After

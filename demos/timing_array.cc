@@ -40,7 +40,7 @@ TimingArray::TimingArray() {
 void TimingArray::FlushFromCache() {
   // We only need to flush the cache lines with elements on them.
   for (int i = 0; i < size(); ++i) {
-    FlushDataCacheLineNoBarrier(&ElementAt(i));
+    FlushDataCacheLineNoBarrier_GuestAddr(&ElementAt(i));
   }
 
   // Wait for flushes to finish.

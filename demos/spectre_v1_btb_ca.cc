@@ -114,7 +114,7 @@ static char LeakByte(size_t offset) {
 
       // Only the parent needs to flush the accessor.
       if (pid != 0) {
-        FlushFromDataCache(accessor_bytes, accessor_bytes + sizeof(DataAccessor));
+        FlushFromDataCache_GuestAddr(accessor_bytes, accessor_bytes + sizeof(DataAccessor));
       }
 
       // Speculative fetch at the offset. Architecturally the victim fetches
