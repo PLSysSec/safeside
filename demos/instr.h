@@ -44,6 +44,7 @@ void MemoryAndSpeculationBarrier();
 // cache hierarchy. For split cache levels, `address` is flushed from dcache.
 // Implementation in instr_*.h.
 void FlushDataCacheLineNoBarrier(const void *address);
+void FlushDataCacheLineNoBarrier64(uint64_t address);
 
 // Convenience wrapper to flush and wait.
 inline void FlushDataCacheLine(void *address) {

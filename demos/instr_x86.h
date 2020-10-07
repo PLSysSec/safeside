@@ -32,4 +32,8 @@ inline void FlushDataCacheLineNoBarrier(const void *address) {
   _mm_clflush(address);
 }
 
+inline void FlushDataCacheLineNoBarrier64(uint64_t address) {
+  _mm_clflush(reinterpret_cast<const void*>(address));
+}
+
 #endif  // DEMOS_INSTR_X86_H_

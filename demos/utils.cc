@@ -34,11 +34,30 @@ const void* StartOfNextCacheLine(const void* addr) {
   return reinterpret_cast<const void*>(next_n);
 }
 
+// Returns the address of the first byte of the cache line *after* the one on
+// which `addr` falls.
+uint64_t StartOfNextCacheLine64(uint64_t addr) {
+  auto addr_n = addr;
+
+  // Create an address on the next cache line, then mask it to round it down to
+  // cache line alignment.
+  auto next_n = (addr_n + kCacheLineBytes) & ~(kCacheLineBytes - 1);
+  return reinterpret_cast<uint64_t>(next_n);
+}
+
 }  // namespace
 
 void FlushFromDataCache(const void *begin, const void *end) {
   for (; begin < end; begin = StartOfNextCacheLine(begin)) {
     FlushDataCacheLineNoBarrier(begin);
+  }
+  MemoryAndSpeculationBarrier();
+}
+
+
+void FlushFromDataCache64(uint64_t begin, uint64_t end) {
+  for (; begin < end; begin = StartOfNextCacheLine64(begin)) {
+    FlushDataCacheLineNoBarrier64(begin);
   }
   MemoryAndSpeculationBarrier();
 }

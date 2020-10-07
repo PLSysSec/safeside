@@ -11,6 +11,7 @@
 #define DEMOS_UTILS_H_
 
 #include "compiler_specifics.h"
+#include <cstdint>
 
 // Forced memory load. Loads the memory into cache. Used during both real and
 // speculative execution to create a microarchitectural side effect in the
@@ -24,6 +25,8 @@ void ForceRead(const void *p) {
 // Flush a memory interval from cache. Used to induce speculative execution on
 // flushed values until they are fetched back to the cache.
 void FlushFromDataCache(const void *start, const void *end);
+void FlushFromDataCache64(uint64_t begin, uint64_t end);
+
 #if SAFESIDE_LINUX
 void PinToTheFirstCore();
 #endif
