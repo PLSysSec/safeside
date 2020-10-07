@@ -41,7 +41,8 @@ uint64_t StartOfNextCacheLine_HostAddr(uint64_t addr) {
 
   // Create an address on the next cache line, then mask it to round it down to
   // cache line alignment.
-  auto next_n = (addr_n + kCacheLineBytes) & ~(kCacheLineBytes - 1);
+  const uint64_t kCacheLineBytes_n = kCacheLineBytes;
+  auto next_n = (addr_n + kCacheLineBytes_n) & ~(kCacheLineBytes_n - 1);
   return reinterpret_cast<uint64_t>(next_n);
 }
 
