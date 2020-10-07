@@ -74,7 +74,7 @@ static bool ReturnsTrue(int counter) {
   char stack_mark = 'a';
   #ifdef SAFESIDE_WASM
     uint64_t stack_ptr = 0;
-    if (ReturnsTrueStackPtr == 0) {
+    if (counter == kRecursionDepth) {
       stack_ptr = getWasmStackPtr();
       stack_ptr += 728 /* correction */;
     } else {
@@ -107,9 +107,6 @@ char Ret2specLeakByte() {
   CacheSideChannel sidechannel;
   oracle_ptr = &sidechannel.GetOracle();
   const std::array<BigByte, 256> &oracle = *oracle_ptr;
-  #ifdef SAFESIDE_WASM
-  ReturnsTrueStackPtr = 0;
-  #endif
 
   for (int run = 0;; ++run) {
     sidechannel.FlushOracle();
