@@ -60,7 +60,7 @@ bool ReturnsFalse(int counter) {
     }
   } else {
     // Increase the interference if running cross-address-space.
-    return_true_base_case();
+    // return_true_base_case();
   }
   return false_value;
 }
@@ -76,7 +76,7 @@ static bool ReturnsTrue(int counter) {
     uint64_t stack_ptr = 0;
     if (counter == kRecursionDepth) {
       stack_ptr = getWasmStackPtr();
-      stack_ptr += 728 /* correction */;
+      stack_ptr += 632 /* correction */;
     } else {
       stack_ptr = ReturnsTrueStackPtr - 112 /* ReturnsTrue stack frame size */;
     }
@@ -92,7 +92,8 @@ static bool ReturnsTrue(int counter) {
   } else {
     // In the deepest invocation starts the ReturnsFalse recursion or
     // unschedule to increase the interference.
-    return_false_base_case();
+    // return_false_base_case();
+    ReturnsFalse(kRecursionDepth);
   }
 
   // Cleans-up its stack mark and flushes from the cache everything between its
@@ -116,7 +117,7 @@ char Ret2specLeakByte() {
     char stack_mark = 'a';
     #ifdef SAFESIDE_WASM
       uint64_t stack_ptr = getWasmStackPtr();
-      stack_ptr += 776 /* correction */;
+      stack_ptr += 624 /* correction */;
     #else
       uint64_t stack_ptr = reinterpret_cast<uint64_t>(&stack_mark);
     #endif
