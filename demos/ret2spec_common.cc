@@ -59,10 +59,8 @@ bool ReturnsFalse(int counter) {
       exit(EXIT_FAILURE);
     }
   } else {
-#ifndef SAFESIDE_WASM
     // Increase the interference if running cross-address-space.
-    return_true_base_case();
-#endif
+    // return_true_base_case();
   }
   return false_value;
 }
@@ -75,14 +73,14 @@ uint64_t ReturnsTrueStackPtr = 0;
 static bool ReturnsTrue(int counter) {
   char stack_mark = 'a';
   #ifdef SAFESIDE_WASM
-    uint64_t stack_ptr = 0;
-    if (counter == kRecursionDepth) {
-      stack_ptr = getWasmStackPtr();
-      stack_ptr += 632 /* correction */;
-    } else {
-      stack_ptr = ReturnsTrueStackPtr - 112 /* ReturnsTrue stack frame size */;
-    }
-    ReturnsTrueStackPtr = stack_ptr;
+    uint64_t stack_ptr = getWasmStackPtr();
+    // if (counter == kRecursionDepth) {
+    //   stack_ptr = getWasmStackPtr();
+    //   stack_ptr += 632 /* correction */;
+    // } else {
+    //   stack_ptr = ReturnsTrueStackPtr - 112 /* ReturnsTrue stack frame size */;
+    // }
+    // ReturnsTrueStackPtr = stack_ptr;
   #else
     uint64_t stack_ptr = reinterpret_cast<uint64_t>(&stack_mark);
   #endif
@@ -94,11 +92,8 @@ static bool ReturnsTrue(int counter) {
   } else {
     // In the deepest invocation starts the ReturnsFalse recursion or
     // unschedule to increase the interference.
-#ifdef SAFESIDE_WASM
+    // return_false_base_case();
     ReturnsFalse(kRecursionDepth);
-#else
-    return_false_base_case();
-#endif
   }
 
   // Cleans-up its stack mark and flushes from the cache everything between its
