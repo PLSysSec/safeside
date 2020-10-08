@@ -59,8 +59,10 @@ bool ReturnsFalse(int counter) {
       exit(EXIT_FAILURE);
     }
   } else {
+#ifndef SAFESIDE_WASM
     // Increase the interference if running cross-address-space.
-    // return_true_base_case();
+    return_true_base_case();
+#endif
   }
   return false_value;
 }
@@ -92,8 +94,11 @@ static bool ReturnsTrue(int counter) {
   } else {
     // In the deepest invocation starts the ReturnsFalse recursion or
     // unschedule to increase the interference.
-    // return_false_base_case();
+#ifdef SAFESIDE_WASM
     ReturnsFalse(kRecursionDepth);
+#else
+    return_false_base_case();
+#endif
   }
 
   // Cleans-up its stack mark and flushes from the cache everything between its
