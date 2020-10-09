@@ -5,12 +5,6 @@ GDB=gdb
 LUCET_WASI=$HOME/spectresandboxing/lucet-spectre/target/release/lucet-wasi
 LUCET_WASI_ARGS='--heap-address-space 8GiB --max-heap-size 4GiB --stack-size 8MiB --dir /:/'
 
-NATIVE_RETURNTRUE_ARGS=$(cat <<-END
-# replace first instruction of ReturnsTrue(int)_37 with a jump to 
-
-END
-) # END must be on its own line, so ) is here
-
 if [[ $1 == "pht_sa" ]]; then
 
   SO=spectre_v1_pht_sa.so
