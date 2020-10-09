@@ -1,0 +1,24 @@
+# replace clflush_hostaddr hostcall with clflush(rsi)
+set $addr = (char*)&'guest_func__Z27FlushFromDataCache_HostAddryy'
+print *($addr + 69) = 0x0f
+print *($addr + 70) = 0xae
+print *($addr + 71) = 0x3e
+print *($addr + 72) = 0x90
+print *($addr + 73) = 0x90
+
+# replace get_host_stack_ptr hostcall with noop
+set $addr = (char*)&'ReturnsTrue(int)_37'
+print *($addr + 94) = 0x0F
+print *($addr + 95) = 0x1F
+print *($addr + 96) = 0x44
+print *($addr + 97) = 0x00
+print *($addr + 98) = 0x00
+
+# replace get_host_stack_ptr hostcall return read with mov rax, rsp
+set $addr = (char*)&'ReturnsTrue(int)_37'
+print *($addr + 118) = 0x48
+print *($addr + 119) = 0x89
+print *($addr + 120) = 0xe0
+print *($addr + 121) = 0x90
+print *($addr + 122) = 0x90
+

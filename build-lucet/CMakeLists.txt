@@ -12,13 +12,14 @@ set(LUCET_WASI_DIR $ENV{HOME}/spectresandboxing/lucet-spectre/lucet-wasi)
 set(LUCET_DIR $ENV{HOME}/spectresandboxing/lucet-spectre)
 set(WASI_SDK_DIR $ENV{HOME}/wasi-sdk/build/install/opt/wasi-sdk)
 set(WASI_SYSROOT_DIR ${WASI_SDK_DIR}/share/wasi-sysroot)
-set(CLANG ${WASI_SDK_DIR}/bin/clang)
-set(CLANG++ ${WASI_SDK_DIR}/bin/clang++)
+set(WASICLANG ${WASI_SDK_DIR}/bin/clang)
+set(WASICLANG++ ${WASI_SDK_DIR}/bin/clang++)
 set(LUCETC ${LUCET_DIR}/target/release/lucetc)
 set(WASI_BINDINGS_JSON ${safeside_SOURCE_DIR}/build-lucet/bindings.json)
+set(NATIVE_CLANG++ /usr/bin/clang++)
 
-set(CMAKE_C_COMPILER ${CLANG})
-set(CMAKE_CXX_COMPILER ${CLANG++})
+set(CMAKE_C_COMPILER ${WASICLANG})
+set(CMAKE_CXX_COMPILER ${WASICLANG++})
 set(CMAKE_BUILD_TYPE Release)
 
 # Apply settings suitable for wasm module compilation
@@ -30,14 +31,14 @@ set(CMAKE_CXX_FLAGS
 set(CMAKE_C_LINK_FLAGS "")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all")
 
-set(TARGETS spectre_v1_pht_sa ret2spec_sa)
-set(TARGETS_SO spectre_v1_pht_sa.so ret2spec_sa.so) # I can't figure out how to automate this in CMake
-
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(DYLIB_EXT "dylib")
 else()
   set(DYLIB_EXT "so")
 endif()
+
+set(TARGETS spectre_v1_pht_sa ret2spec_sa)
+set(TARGETS_SO spectre_v1_pht_sa.${DYLIB_EXT} ret2spec_sa.${DYLIB_EXT}) # I can't figure out how to automate this in CMake
 
 FOREACH(TARGET ${TARGETS})
 
@@ -64,5 +65,25 @@ FOREACH(TARGET ${TARGETS})
 
 ENDFOREACH(TARGET)
 
-add_custom_target(all_targets ALL DEPENDS ${TARGETS_SO})
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/ret2spec_sa_native.${DYLIB_EXT}
+                   DEPENDS ${safeside_SOURCE_DIR}/demos/ret2spec_common.cc
+                           ${safeside_SOURCE_DIR}/demos/cache_sidechannel.cc
+                           ${safeside_SOURCE_DIR}/demos/utils.cc
+                           ${safeside_SOURCE_DIR}/demos/asm/measurereadlatency_x86_64.S
+                           ${safeside_SOURCE_DIR}/demos/cache_sidechannel.h
+                           ${safeside_SOURCE_DIR}/demos/local_content.h
+                           ${safeside_SOURCE_DIR}/demos/utils.h
+                           ${safeside_SOURCE_DIR}/demos/asm/measurereadlatency.h
+                           ${safeside_SOURCE_DIR}/demos/ret2spec_sa.cc
+                   COMMAND ${NATIVE_CLANG++}
+                           -shared -fPIC
+                           ${safeside_SOURCE_DIR}/demos/ret2spec_common.cc
+                           ${safeside_SOURCE_DIR}/demos/ret2spec_sa.cc
+                           ${safeside_SOURCE_DIR}/demos/cache_sidechannel.cc
+                           ${safeside_SOURCE_DIR}/demos/utils.cc
+                           ${safeside_SOURCE_DIR}/demos/asm/measurereadlatency_x86_64.S
+                           -o ${CMAKE_BINARY_DIR}/ret2spec_sa_native.${DYLIB_EXT}
+                   COMMENT "Compiling ret2spec_common for native")
+
+add_custom_target(all_targets ALL DEPENDS ${TARGETS_SO} ret2spec_sa_native.${DYLIB_EXT})
 

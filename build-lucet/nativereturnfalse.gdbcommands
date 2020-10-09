@@ -1,0 +1,31 @@
+# overwrite the beginning of guest_func__Z12ReturnsFalsei with a jump to _ZL12ReturnsFalsei
+
+# load native .so which contains code for _ZL12ReturnsFalsei
+set $soaddr = (void*) dlopen("./build/ret2spec_sa_native.so", 2)
+add-symbol-file "./build/ret2spec_sa_native.so" $soaddr
+
+# get address where we'll write our instructions
+set $writeaddr = (char*) &'guest_func__Z12ReturnsFalsei'
+
+# get address where we'll be jumping to
+set $jumptargetaddr = (uint64_t)((char*) &'_ZL12ReturnsFalsei')
+
+# we'll write two instructions: mov r11, <addr> and then jmp r11.
+# (note r11 is caller-save, so we're free to destroy it)
+
+# write the mov instruction: 0x49 0xBB and then the 8 bytes of the address, little-endian
+print *($writeaddr + 0) = 0x49
+print *($writeaddr + 1) = 0xBB
+print *($writeaddr + 2) = ($jumptargetaddr & 0x00000000000000FF) >> 0
+print *($writeaddr + 3) = ($jumptargetaddr & 0x000000000000FF00) >> 8
+print *($writeaddr + 4) = ($jumptargetaddr & 0x0000000000FF0000) >> 16
+print *($writeaddr + 5) = ($jumptargetaddr & 0x00000000FF000000) >> 24
+print *($writeaddr + 6) = ($jumptargetaddr & 0x000000FF00000000) >> 32
+print *($writeaddr + 7) = ($jumptargetaddr & 0x0000FF0000000000) >> 40
+print *($writeaddr + 8) = ($jumptargetaddr & 0x00FF000000000000) >> 48
+print *($writeaddr + 9) = ($jumptargetaddr & 0xFF00000000000000) >> 56
+
+# write the jump instruction: jmp r11 = 0x41 0xFF 0xE3
+print *($writeaddr + 10) = 0x41
+print *($writeaddr + 11) = 0xff
+print *($writeaddr + 12) = 0xe3
