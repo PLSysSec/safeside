@@ -73,14 +73,14 @@ uint64_t ReturnsTrueStackPtr = 0;
 static bool ReturnsTrue(int counter) {
   char stack_mark = 'a';
   #ifdef SAFESIDE_WASM
-    uint64_t stack_ptr = getWasmStackPtr();
-    // if (counter == kRecursionDepth) {
-    //   stack_ptr = getWasmStackPtr();
-    //   stack_ptr += 632 /* correction */;
-    // } else {
-    //   stack_ptr = ReturnsTrueStackPtr - 112 /* ReturnsTrue stack frame size */;
-    // }
-    // ReturnsTrueStackPtr = stack_ptr;
+    uint64_t stack_ptr = 0; //getWasmStackPtr();
+    if (counter == kRecursionDepth) {
+      stack_ptr = getWasmStackPtr();
+      stack_ptr += 632 /* correction */;
+    } else {
+      stack_ptr = ReturnsTrueStackPtr - 112 /* ReturnsTrue stack frame size */;
+    }
+    ReturnsTrueStackPtr = stack_ptr;
   #else
     uint64_t stack_ptr = reinterpret_cast<uint64_t>(&stack_mark);
   #endif
@@ -117,7 +117,7 @@ char Ret2specLeakByte() {
     char stack_mark = 'a';
     #ifdef SAFESIDE_WASM
       uint64_t stack_ptr = getWasmStackPtr();
-      stack_ptr += 624 /* correction */;
+      stack_ptr += 632 /* correction */;
     #else
       uint64_t stack_ptr = reinterpret_cast<uint64_t>(&stack_mark);
     #endif

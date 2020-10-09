@@ -80,15 +80,15 @@ std::pair<bool, char> CacheSideChannel::RecomputeScores(
   uint64_t median_latency = sorted_latencies[128];
 
 #ifdef SAFESIDE_WASM
-  printf("256 sorted latencies: 3rd-lowest %llu, median %llu, 3rd-highest %llu\n",
-      sorted_latencies[2], median_latency, sorted_latencies[253]);
-  printf("Latency of safe_offset_char is %llu\n",
-      latencies[static_cast<size_t>(static_cast<unsigned char>(safe_offset_char))]);
+  // printf("256 sorted latencies: 3rd-lowest %llu, median %llu, 3rd-highest %llu\n",
+      // sorted_latencies[2], median_latency, sorted_latencies[253]);
+  // printf("Latency of safe_offset_char is %llu\n",
+      // latencies[static_cast<size_t>(static_cast<unsigned char>(safe_offset_char))]);
 #else
-  printf("256 sorted latencies: 3rd-lowest %lu, median %lu, 3rd-highest %lu\n",
-      sorted_latencies[2], median_latency, sorted_latencies[253]);
-  printf("Latency of safe_offset_char is %lu\n",
-      latencies[static_cast<size_t>(static_cast<unsigned char>(safe_offset_char))]);
+  // printf("256 sorted latencies: 3rd-lowest %lu, median %lu, 3rd-highest %lu\n",
+      // sorted_latencies[2], median_latency, sorted_latencies[253]);
+  // printf("Latency of safe_offset_char is %lu\n",
+      // latencies[static_cast<size_t>(static_cast<unsigned char>(safe_offset_char))]);
 #endif
 
   // The difference between a cache-hit and cache-miss times is significantly
@@ -105,7 +105,7 @@ std::pair<bool, char> CacheSideChannel::RecomputeScores(
     }
   }
 
-  printf("Detected %i hits (not counting safe_offset_char)\n", hitcount);
+  // printf("Detected %i hits (not counting safe_offset_char)\n", hitcount);
 
   // If there is not exactly one hit, we consider that sample invalid and
   // skip it.
@@ -114,7 +114,7 @@ std::pair<bool, char> CacheSideChannel::RecomputeScores(
       if (latencies[i] < median_latency - hitmiss_diff / 2 &&
           i != safe_offset_char) {
         ++scores_[i];
-        printf("Incrementing score for %zu; it is now %i\n", i, scores_[i]);
+        // printf("Incrementing score for %zu; it is now %i\n", i, scores_[i]);
       }
     }
   }
