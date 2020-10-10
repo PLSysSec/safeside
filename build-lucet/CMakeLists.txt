@@ -59,6 +59,7 @@ FOREACH(TARGET ${TARGETS})
                              --guard-size "4GiB"
                              --min-reserved-size "4GiB"
                              --max-reserved-size "4GiB"
+                             --pinned-heap-reg
                              ${TARGET}.wasm
                              -o ${CMAKE_BINARY_DIR}/${TARGET}.${DYLIB_EXT}
                      COMMENT "Compiling wasm file to native")
