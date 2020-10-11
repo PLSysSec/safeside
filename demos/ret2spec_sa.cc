@@ -46,7 +46,7 @@ static void NopFunction() {}
 
 // Starts the recursive execution of ReturnsFalse.
 static void ReturnsFalseRecursion() {
-  ReturnsFalse(kRecursionDepth);
+  ReturnsFalse(kRecursionDepth, 0);
 }
 
 int main() {

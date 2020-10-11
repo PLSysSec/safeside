@@ -32,6 +32,8 @@ const std::array<BigByte, 256> *oracle_ptr;
 // Return value of ReturnsFalse that never changes. Avoiding compiler
 // optimizations with it.
 bool false_value = false;
+// Likewise for true (for ReturnsLeaks)
+bool true_value = true;
 // Pointers to stack marks in ReturnsTrue. Used for flushing the return address
 // from the cache.
 std::vector<uint64_t> stack_mark_pointers;
@@ -47,14 +49,35 @@ static inline SAFESIDE_ALWAYS_INLINE uint64_t getWasmStackPtr() {
 }
 #endif
 
-// Always returns false.
-bool ReturnsFalse(int counter) {
+// Always returns true, but leaks `val` speculatively
+bool ReturnsLeaks(int counter, char val) {
   if (counter > 0) {
-    if (ReturnsFalse(counter - 1)) {
-      // Unreachable code. ReturnsFalse can never return true.
+    if (!ReturnsLeaks(counter - 1, val)) {
+      // Unreachable code, as ReturnsLeaks can never return false
       const std::array<BigByte, 256> &oracle = *oracle_ptr;
       ForceRead(oracle.data() +
-                static_cast<unsigned char>(private_data[current_offset]));
+                static_cast<unsigned char>(val));
+      std::cout << "Dead code. Must not be printed." << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+  return true_value;
+}
+
+// Always returns false. `val` is ignored, but this function has a `val`
+// parameter to hopefully give it the same stack slot as `val` in ReturnsLeaks
+bool ReturnsFalse(int counter, char val) {
+  if (counter > 0) {
+    if (ReturnsFalse(counter - 1, val)) {
+      // Unreachable code. ReturnsFalse can never return true.
+      unsigned char* ptr = (unsigned char*) 0x12345;
+      val = *(ptr+current_offset);
+      // Retrain to ReturnsLeaks.
+      ReturnsLeaks(16, val);
+      // This return statement should speculatively return to the middle of
+      // ReturnsLeaks, leaking `val` (as long as `val` is assigned the same
+      // stack slot in ReturnsLeaks and ReturnsFalse)
+      return false;
       std::cout << "Dead code. Must not be printed." << std::endl;
       exit(EXIT_FAILURE);
     }
@@ -93,7 +116,7 @@ static bool ReturnsTrue(int counter) {
     // In the deepest invocation starts the ReturnsFalse recursion or
     // unschedule to increase the interference.
     // return_false_base_case();
-    ReturnsFalse(kRecursionDepth);
+    ReturnsFalse(kRecursionDepth, 0);
   }
 
   // Cleans-up its stack mark and flushes from the cache everything between its

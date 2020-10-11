@@ -17,5 +17,5 @@ extern void (*return_false_base_case)();
 extern size_t current_offset;
 extern const std::array<BigByte, 256> *oracle_ptr;
 
-bool ReturnsFalse(int counter);
+bool ReturnsFalse(int counter, char val);
 char Ret2specLeakByte();
