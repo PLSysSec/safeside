@@ -8,3 +8,12 @@ print *($mapped+0x673) = 'R'
 print *($mapped+0x674) = 'E'
 print *($mapped+0x675) = 'T'
 print *($mapped+0x676) = '\0'
+
+# map address 0xC3B0 to avoid a segfault in speculative code (in ReturnsFalse)
+print (void*) mmap(0xC000, 4096, 0x1 | 0x2 | 0x4, 0x20 | 0x02 | 0x10, -1, 0)
+
+# set (disabled) breakpoints at ReturnsFalse and ReturnsLeaks
+br guest_func__Z12ReturnsFalseic
+br guest_func__Z12ReturnsLeaksicb
+disable 2
+disable 3

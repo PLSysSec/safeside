@@ -59,16 +59,22 @@ bool ReturnsLeaks(int counter, char val, bool dummyfalse) {
                 static_cast<unsigned char>(val));
       uint64_t stack_ptr = 0;
       #ifdef SAFESIDE_WASM
-        if (dummyfalse) {
-          stack_ptr = getWasmStackPtr();
+        // these are here just to affect register allocation in this function
+        // we've already leaked the data, so it doesn't matter what happens
+        // after that speculatively
+        int junk = dummyfalse + counter + val % counter;
+        int junk2 = dummyfalse + junk - val % junk;
+        if (dummyfalse + junk2 + (junk % junk2) + (val / junk)) {
+          (void)__wasi_get_host_stack_ptr(NULL);
+          FlushFromDataCache_GuestAddr(0, 0);
           FlushFromDataCache_HostAddr(0, 0);
         }
       #endif
-      std::cout << "Dead code. Must not be printed." << stack_ptr << std::endl;
+      std::cout << "Dead code. Must not be printed." << std::endl;
       exit(EXIT_FAILURE);
     }
   }
-  return true_value;
+  return !dummyfalse;
 }
 
 // Always returns false. `val` is ignored, but this function has a `val`
