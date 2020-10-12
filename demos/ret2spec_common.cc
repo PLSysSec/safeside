@@ -50,14 +50,21 @@ static inline SAFESIDE_ALWAYS_INLINE uint64_t getWasmStackPtr() {
 #endif
 
 // Always returns true, but leaks `val` speculatively
-bool ReturnsLeaks(int counter, char val) {
+bool ReturnsLeaks(int counter, char val, bool dummyfalse) {
   if (counter > 0) {
-    if (!ReturnsLeaks(counter - 1, val)) {
+    if (!ReturnsLeaks(counter - 1, val, dummyfalse)) {
       // Unreachable code, as ReturnsLeaks can never return false
       const std::array<BigByte, 256> &oracle = *oracle_ptr;
       ForceRead(oracle.data() +
                 static_cast<unsigned char>(val));
-      std::cout << "Dead code. Must not be printed." << std::endl;
+      uint64_t stack_ptr = 0;
+      #ifdef SAFESIDE_WASM
+        if (dummyfalse) {
+          stack_ptr = getWasmStackPtr();
+          FlushFromDataCache_HostAddr(0, 0);
+        }
+      #endif
+      std::cout << "Dead code. Must not be printed." << stack_ptr << std::endl;
       exit(EXIT_FAILURE);
     }
   }
@@ -70,10 +77,10 @@ bool ReturnsFalse(int counter, char val) {
   if (counter > 0) {
     if (ReturnsFalse(counter - 1, val)) {
       // Unreachable code. ReturnsFalse can never return true.
-      unsigned char* ptr = (unsigned char*) 0x12345;
-      val = *(ptr+current_offset);
+      unsigned char* ptr = (unsigned char*) 0x12345670;
+      val = *(ptr);
       // Retrain to ReturnsLeaks.
-      ReturnsLeaks(16, val);
+      ReturnsLeaks(16, val, false);
       // This return statement should speculatively return to the middle of
       // ReturnsLeaks, leaking `val` (as long as `val` is assigned the same
       // stack slot in ReturnsLeaks and ReturnsFalse)

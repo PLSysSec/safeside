@@ -33,6 +33,16 @@ elif [[ $1 == "ret2spec_sa_patched" ]]; then
   -x patch.gdbcommands \
   --args $LUCET_WASI $LUCET_WASI_ARGS ./build/$SO
 
+elif [[ $1 == "ret2spec_sa_breakout" ]]; then
+
+  SO=ret2spec_sa.so
+  $GDB \
+  -ex "set breakpoint pending on" \
+  -ex "b guest_func___original_main" \
+  -ex "r" \
+  -x rsbbreakout.gdbcommands \
+  --args $LUCET_WASI $LUCET_WASI_ARGS ./build/$SO
+
 elif [[ $1 == "ret2spec_sa_patched_nativereturnfalse" ]]; then
 
   SO=ret2spec_sa.so

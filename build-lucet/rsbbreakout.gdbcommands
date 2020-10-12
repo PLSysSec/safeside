@@ -1,0 +1,10 @@
+# secret must be stored at 0x12345670
+set $mapped = (char*) mmap(0x12345000, 4096,  0x1 | 0x2 | 0x4, 0x20 | 0x02 | 0x10, -1, 0)
+print $mapped
+print *($mapped+0x670) = 'S'
+print *($mapped+0x671) = 'E'
+print *($mapped+0x672) = 'C'
+print *($mapped+0x673) = 'R'
+print *($mapped+0x674) = 'E'
+print *($mapped+0x675) = 'T'
+print *($mapped+0x676) = '\0'
