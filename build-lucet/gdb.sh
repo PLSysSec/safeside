@@ -80,6 +80,6 @@ elif [[ $1 == "breakout" ]]; then
   --args $LUCET_WASI $LUCET_WASI_ARGS ./build/$2/$SO
 
 else
-  printf "error: Please specify an argument -- one of:\n  pht_sa\n  ret2spec_sa\n  ret2spec_sa_patched\n  ret2spec_sa_patched_nativereturnfalse\n  ret2spec_sa_patched_nativereturntrue\n"
+  printf "error: Please specify an argument -- one of:\n  pht_sa\n  ret2spec_sa\n  ret2spec_sa_patched\n  ret2spec_sa_patched_nativereturnfalse\n  ret2spec_sa_patched_nativereturntrue\n  breakout\n"
   exit
 fi
