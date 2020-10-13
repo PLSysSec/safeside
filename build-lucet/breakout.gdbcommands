@@ -37,7 +37,7 @@ c
 set $target =  $rdx + (((uint64_t)0x0001000) << 4)
 set $page = $target & 0xfffffffffffff000
 set $mappedslot = (char*) mmap($page, 4096,  0x1 | 0x2 | 0x4, 0x20 | 0x02 | 0x10, -1, 0)
-print *(uint64_t*) $target = 3
+print *(uint64_t*) $target = 2
 set $func_loc = 0x15678000
 print *(uint64_t*) ($target+8) = $func_loc
 
