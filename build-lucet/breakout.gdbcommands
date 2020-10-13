@@ -12,20 +12,34 @@
 #  movzx  eax,BYTE PTR [rsp+rsi*1-0x7]
 #  ret
 
+set pagination off
 
-set $indirectCallAddr = (char*) &'guest_func__Z12callIndirectPPFciE'
-set $indirectCallAddr = $indirectCallAddr + 48
-tb *$indirectCallAddr
+set $indirectCallAddr = (char*) &'guest_func__Z12callIndirectPPFciEPb'
+
+# wait for instruction that computes the address of the indirect function table length object
+set $indirectCallLenInstAddr = $indirectCallAddr + 48
+tb *$indirectCallLenInstAddr
 c
 
-# patch in this function at the target
+## Hack --- disable bounds check for testing
+## p *($indirectCallAddr + 57)=0x90
+## p *($indirectCallAddr + 58)=0x90
+
+# Save the table length object address
+set $indirectCallLenAddr = (uint64_t)$rdx + 0x8
+
+# wait for instruction that computes the indirect function table rows
+set $indirectCallSlotInstAddr = $indirectCallAddr + 70
+tb *$indirectCallSlotInstAddr
+c
+
+# patch in this function at the expected OOB target
 set $target =  $rdx + (((uint64_t)0x0001000) << 4)
 set $page = $target & 0xfffffffffffff000
 set $mappedslot = (char*) mmap($page, 4096,  0x1 | 0x2 | 0x4, 0x20 | 0x02 | 0x10, -1, 0)
 print *(uint64_t*) $target = 3
 set $func_loc = 0x15678000
 print *(uint64_t*) ($target+8) = $func_loc
-
 
 set $mapped = (char*) mmap($func_loc, 4096,  0x1 | 0x2 | 0x4, 0x20 | 0x02 | 0x10, -1, 0)
 
@@ -61,3 +75,22 @@ print *($func_loc + 28) = 0x44
 print *($func_loc + 29) = 0x34
 print *($func_loc + 30) = 0xf9
 print *($func_loc + 31) = 0xc3
+
+# patch the clflush of host tables
+# sanity check
+set $trainleakaddr = (char*) &'guest_func__Z29flush_function_table_len_addrv'
+set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
+set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
+
+if *$trainleakaddr1 != 0x1234567890abcde
+print "!!!!!!! Error performing patch 1!!!!!!!"
+end
+
+print *$trainleakaddr1 = $indirectCallLenAddr
+
+if *$trainleakaddr2 != 0x1234567890abce6
+print "!!!!!!! Error performing patch 2!!!!!!!"
+end
+
+print *$trainleakaddr2 = $indirectCallLenAddr + 8
+c
