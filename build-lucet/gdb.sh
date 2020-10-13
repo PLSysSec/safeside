@@ -69,6 +69,16 @@ elif [[ $1 == "ret2spec_sa_patched_nativereturntrue" ]]; then
   -x nativereturntrue.gdbcommands \
   --args $LUCET_WASI $LUCET_WASI_ARGS $ASLR_FLAGS ./build/$2/$SO
 
+elif [[ $1 == "breakout" ]]; then
+
+  SO=breakout.so
+  $GDB \
+  -ex "set breakpoint pending on" \
+  -ex "b guest_func___original_main" \
+  -ex "r" \
+  -x breakout.gdbcommands \
+  --args $LUCET_WASI $LUCET_WASI_ARGS ./build/$SO
+
 else
   printf "error: Please specify an argument -- one of:\n  pht_sa\n  ret2spec_sa\n  ret2spec_sa_patched\n  ret2spec_sa_patched_nativereturnfalse\n  ret2spec_sa_patched_nativereturntrue\n"
   exit

@@ -1,0 +1,63 @@
+# char secret(void* heap, int num) {
+#     char a[] = { 'S', 'e', 'c', 'r', 'e', 't', '\0'};
+#     return a[num];
+# }
+
+# secret(void*, int):
+#  mov    eax,0x7465
+#  movsxd rsi,esi
+#  mov    BYTE PTR [rsp-0x1],0x0
+#  mov    DWORD PTR [rsp-0x7],0x72636553
+#  mov    WORD PTR [rsp-0x3],ax
+#  movzx  eax,BYTE PTR [rsp+rsi*1-0x7]
+#  ret
+
+
+set $indirectCallAddr = (char*) &'guest_func__Z12callIndirectPPFciE'
+set $indirectCallAddr = $indirectCallAddr + 48
+tb *$indirectCallAddr
+c
+
+# patch in this function at the target
+set $target =  $rdx + (((uint64_t)0x0001000) << 4)
+set $page = $target & 0xfffffffffffff000
+set $mappedslot = (char*) mmap($page, 4096,  0x1 | 0x2 | 0x4, 0x20 | 0x02 | 0x10, -1, 0)
+print *(uint64_t*) $target = 3
+set $func_loc = 0x15678000
+print *(uint64_t*) ($target+8) = $func_loc
+
+
+set $mapped = (char*) mmap($func_loc, 4096,  0x1 | 0x2 | 0x4, 0x20 | 0x02 | 0x10, -1, 0)
+
+print *($func_loc + 0)  = 0xb8
+print *($func_loc + 1)  = 0x65
+print *($func_loc + 2)  = 0x74
+print *($func_loc + 3)  = 0x00
+print *($func_loc + 4)  = 0x00
+print *($func_loc + 5)  = 0x48
+print *($func_loc + 6)  = 0x63
+print *($func_loc + 7)  = 0xf6
+print *($func_loc + 8)  = 0xc7
+print *($func_loc + 9)  = 0x44
+print *($func_loc + 10) = 0x24
+print *($func_loc + 11) = 0xf9
+print *($func_loc + 12) = 0x53
+print *($func_loc + 13) = 0x65
+print *($func_loc + 14) = 0x63
+print *($func_loc + 15) = 0x72
+print *($func_loc + 16) = 0x66
+print *($func_loc + 17) = 0x89
+print *($func_loc + 18) = 0x44
+print *($func_loc + 19) = 0x24
+print *($func_loc + 20) = 0xfd
+print *($func_loc + 21) = 0xc6
+print *($func_loc + 22) = 0x44
+print *($func_loc + 23) = 0x24
+print *($func_loc + 24) = 0xff
+print *($func_loc + 25) = 0x00
+print *($func_loc + 26) = 0x0f
+print *($func_loc + 27) = 0xb6
+print *($func_loc + 28) = 0x44
+print *($func_loc + 29) = 0x34
+print *($func_loc + 30) = 0xf9
+print *($func_loc + 31) = 0xc3

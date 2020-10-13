@@ -57,6 +57,7 @@ set(COMMON_SRCS
 set(TARGETS
   spectre_v1_pht_sa
   ret2spec_sa
+  breakout
 )
 set(TARGETS_SO  # I can't figure out how to automate this in CMake
   stock/spectre_v1_pht_sa.${DYLIB_EXT}
@@ -82,6 +83,18 @@ set(TARGETS_SO  # I can't figure out how to automate this in CMake
   blade/ret2spec_sa.${DYLIB_EXT}
   phttobtb/ret2spec_sa.${DYLIB_EXT}
   interlock/ret2spec_sa.${DYLIB_EXT}
+
+  stock/breakout.${DYLIB_EXT}
+  loadlfence/breakout.${DYLIB_EXT}
+  strawman/breakout.${DYLIB_EXT}
+  sfi_full/breakout.${DYLIB_EXT}
+  cet_full/breakout.${DYLIB_EXT}
+  sfi_aslr/breakout.${DYLIB_EXT}
+  cet_aslr/breakout.${DYLIB_EXT}
+  cet_only/breakout.${DYLIB_EXT}
+  blade/breakout.${DYLIB_EXT}
+  phttobtb/breakout.${DYLIB_EXT}
+  interlock/breakout.${DYLIB_EXT}
 )
 
 FOREACH(TARGET ${TARGETS})
