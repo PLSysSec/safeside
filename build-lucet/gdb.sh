@@ -77,7 +77,7 @@ elif [[ $1 == "breakout" ]]; then
   -ex "b guest_func___original_main" \
   -ex "r" \
   -x breakout.gdbcommands \
-  --args $LUCET_WASI $LUCET_WASI_ARGS ./build/$SO
+  --args $LUCET_WASI $LUCET_WASI_ARGS ./build/$2/$SO
 
 else
   printf "error: Please specify an argument -- one of:\n  pht_sa\n  ret2spec_sa\n  ret2spec_sa_patched\n  ret2spec_sa_patched_nativereturnfalse\n  ret2spec_sa_patched_nativereturntrue\n"
