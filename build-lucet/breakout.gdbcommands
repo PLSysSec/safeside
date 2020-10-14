@@ -17,19 +17,19 @@ set pagination off
 set $indirectCallAddr = (char*) &'guest_func__Z12callIndirectPPFciEPb'
 
 # wait for instruction that computes the address of the indirect function table length object
-set $indirectCallLenInstAddr = $indirectCallAddr + 48
+set $indirectCallLenInstAddr = $indirectCallAddr + 57
 tb *$indirectCallLenInstAddr
 c
 
 ## Hack --- disable bounds check for testing
-## p *($indirectCallAddr + 57)=0x90
-## p *($indirectCallAddr + 58)=0x90
+## p *($indirectCallAddr + 66)=0x90
+## p *($indirectCallAddr + 67)=0x90
 
 # Save the table length object address
 set $indirectCallLenAddr = (uint64_t)$rdx + 0x8
 
 # wait for instruction that computes the indirect function table rows
-set $indirectCallSlotInstAddr = $indirectCallAddr + 70
+set $indirectCallSlotInstAddr = $indirectCallAddr + 75
 tb *$indirectCallSlotInstAddr
 c
 

