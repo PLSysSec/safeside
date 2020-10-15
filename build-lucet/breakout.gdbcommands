@@ -59,7 +59,7 @@ define pointsToShlRcx4
 end
 
 # set everything up as needed. the rest of the file is the body of this function.
-# expects an argument -- currently supports "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", "sfi_aslr"
+# expects an argument -- currently supports "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", "sfi_aslr", "cet_full", "cet_aslr"
 define initialize
 if $argc != 1
   print "initialize expects exactly one argument"
@@ -92,8 +92,16 @@ else
               if !(int)strncmp($arg0, "sfi_aslr", 10)
                 set $indirectCallLenInstAddr = $indirectCallAddr + 73
               else
-                print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", or "sfi_aslr"; got $arg0 !!!!!!!!!!'
-                error
+                if !(int)strncmp($arg0, "cet_full", 10)
+                  set $indirectCallLenInstAddr = $indirectCallAddr + 140
+                else
+                  if !(int)strncmp($arg0, "cet_aslr", 10)
+                    set $indirectCallLenInstAddr = $indirectCallAddr + 66
+                  else
+                    print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", "sfi_aslr", "cet_full", or "cet_aslr"; got $arg0 !!!!!!!!!!'
+                    error
+                  end
+                end
               end
             end
           end
@@ -142,8 +150,16 @@ else
               if !(int)strncmp($arg0, "sfi_aslr", 10)
                 set $indirectCallSlotInstAddr = $indirectCallAddr + 98
               else
-                print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", or "sfi_aslr"; got $arg0 !!!!!!!!!!'
-                error
+                if !(int)strncmp($arg0, "cet_full", 10)
+                  set $indirectCallSlotInstAddr = $indirectCallAddr + 199
+                else
+                  if !(int)strncmp($arg0, "cet_aslr", 10)
+                    set $indirectCallSlotInstAddr = $indirectCallAddr + 91
+                  else
+                    print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", "sfi_aslr", "cet_full", or "cet_aslr"; got $arg0 !!!!!!!!!!'
+                    error
+                  end
+                end
               end
             end
           end
@@ -246,8 +262,18 @@ else
                 set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
                 set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
               else
-                print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", or "sfi_aslr"; got $arg0 !!!!!!!!!!'
-                error
+                if !(int)strncmp($arg0, "cet_full", 10)
+                  set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 8 + 2)
+                  set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 18 + 2)
+                else
+                  if !(int)strncmp($arg0, "cet_aslr", 10)
+                    set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 8 + 2)
+                    set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 18 + 2)
+                  else
+                    print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", "sfi_aslr", "cet_full", or "cet_aslr"; got $arg0 !!!!!!!!!!'
+                    error
+                  end
+                end
               end
             end
           end
