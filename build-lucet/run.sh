@@ -12,8 +12,7 @@ fi
 if [[ $2 == "" ]]; then
   echo "error: Requires a second argument, which should be the name of a directory in build/"
   exit 1
-fi
-if [ ! -d "./build/$2" ]; then
+elif [ ! -d "./build/$2" ]; then
   echo "error: Second argument should be the name of a directory in build/"
   exit 1
 fi
