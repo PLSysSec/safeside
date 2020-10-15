@@ -68,14 +68,18 @@ end
 
 # wait for instruction that computes the address of the indirect function table length object
 set $indirectCallAddr = (char*) &'guest_func__Z12callIndirectPPFciEPb'
-if !(int)strncmp($arg0, "stock", 8)
+if !(int)strncmp($arg0, "stock", 10)
   set $indirectCallLenInstAddr = $indirectCallAddr + 56
 else
-  if !(int)strncmp($arg0, "strawman", 8)
+  if !(int)strncmp($arg0, "strawman", 10)
     set $indirectCallLenInstAddr = $indirectCallAddr + 68
   else
-    print '!!!!!!!! Expected argument to be either "stock" or "strawman"; got $arg0 !!!!!!!!!!'
-    error
+    if !(int)strncmp($arg0, "loadlfence", 10)
+      set $indirectCallLenInstAddr = $indirectCallAddr + 74
+    else
+      print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", or "strawman"; got $arg0 !!!!!!!!!!'
+      error
+    end
   end
 end
 pointsToMovRdxRdx8 $indirectCallLenInstAddr
@@ -94,14 +98,18 @@ set $indirectCallLenAddr = (uint64_t)$rdx + 0x8
 ## p *($indirectCallAddr + 67)=0x90
 
 # wait for instruction that computes the indirect function table rows
-if !(int)strncmp($arg0, "stock", 8)
+if !(int)strncmp($arg0, "stock", 10)
   set $indirectCallSlotInstAddr = $indirectCallAddr + 74
 else
-  if !(int)strncmp($arg0, "strawman", 8)
+  if !(int)strncmp($arg0, "strawman", 10)
     set $indirectCallSlotInstAddr = $indirectCallAddr + 95
   else
-    print '!!!!!!!! Expected argument to be either "stock" or "strawman"; got $arg0 !!!!!!!!!!'
-    error
+    if !(int)strncmp($arg0, "loadlfence", 10)
+      set $indirectCallSlotInstAddr = $indirectCallAddr + 95
+    else
+      print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", or "strawman"; got $arg0 !!!!!!!!!!'
+      error
+    end
   end
 end
 pointsToShlRcx4 $indirectCallSlotInstAddr
@@ -165,18 +173,22 @@ print *($func_loc + 30) = 0xf9
 print *($func_loc + 31) = 0xc3
 
 # patch the clflush of host tables
-# sanity check
 set $trainleakaddr = (char*) &'guest_func__Z29flush_function_table_len_addrv'
-if !(int)strncmp($arg0, "stock", 8)
+if !(int)strncmp($arg0, "stock", 10)
   set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
   set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
 else
-  if !(int)strncmp($arg0, "strawman", 8)
+  if !(int)strncmp($arg0, "strawman", 10)
     set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 7 + 2)
     set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 17 + 2)
   else
-    print '!!!!!!!! Expected argument to be either "stock" or "strawman"; got $arg0 !!!!!!!!!!'
-    error
+    if !(int)strncmp($arg0, "loadlfence", 10)
+      set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
+      set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
+    else
+      print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", or "strawman"; got $arg0 !!!!!!!!!!'
+      error
+    end
   end
 end
 
