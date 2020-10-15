@@ -18,9 +18,16 @@ if [ ! -d "./build/$2" ]; then
   exit 1
 fi
 
+if [[ $2 == *aslr ]]; then
+  ASLR_FLAGS="--spectre-mitigation-aslr"
+else
+  ASLR_FLAGS=
+fi
+
 $HOME/spectresandboxing/lucet-spectre/target/release/lucet-wasi \
     --heap-address-space "8GiB" \
     --max-heap-size "4GiB" \
     --stack-size "128MiB" \
     --dir /:/ \
+    $ASLR_FLAGS \
     ./build/$2/$SO
