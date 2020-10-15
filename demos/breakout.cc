@@ -41,7 +41,7 @@ __attribute__((noinline))
 char train_and_leak() {
     CacheSideChannel sidechannel;
     const std::array<BigByte, 256> &oracle = sidechannel.GetOracle();
-    const unsigned CONVERGE_ITERATIONS = 100000;
+    const unsigned CONVERGE_ITERATIONS = 10000;
 
     bool* exec = new bool[10000]; // make sure it's a different cacheline from val - not even neighboring cacheline
     functype* val = new functype[100]; // likewise make sure it's a different cacheline from exec
