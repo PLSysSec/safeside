@@ -78,7 +78,7 @@ elif [[ $1 == "breakout" ]]; then
   -ex "r" \
   -x breakout.gdbcommands \
   -ex 'initialize "'$2'"' \
-  --args $LUCET_WASI $LUCET_WASI_ARGS ./build/$2/$SO
+  --args $LUCET_WASI $LUCET_WASI_ARGS $ASLR_FLAGS ./build/$2/$SO
 
 else
   printf "error: Please specify an argument -- one of:\n  pht_sa\n  ret2spec_sa\n  ret2spec_sa_patched\n  ret2spec_sa_patched_nativereturnfalse\n  ret2spec_sa_patched_nativereturntrue\n  breakout\n"

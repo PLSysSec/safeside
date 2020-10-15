@@ -59,7 +59,7 @@ define pointsToShlRcx4
 end
 
 # set everything up as needed. the rest of the file is the body of this function.
-# expects an argument -- currently supports "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock"
+# expects an argument -- currently supports "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", "sfi_aslr"
 define initialize
 if $argc != 1
   print "initialize expects exactly one argument"
@@ -86,8 +86,16 @@ else
           if !(int)strncmp($arg0, "interlock", 10)
             set $indirectCallLenInstAddr = $indirectCallAddr + 130
           else
-            print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", or "interlock"; got $arg0 !!!!!!!!!!'
-            error
+            if !(int)strncmp($arg0, "sfi_full", 10)
+              set $indirectCallLenInstAddr = $indirectCallAddr + 104
+            else
+              if !(int)strncmp($arg0, "sfi_aslr", 10)
+                set $indirectCallLenInstAddr = $indirectCallAddr + 73
+              else
+                print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", or "sfi_aslr"; got $arg0 !!!!!!!!!!'
+                error
+              end
+            end
           end
         end
       end
@@ -128,8 +136,16 @@ else
           if !(int)strncmp($arg0, "interlock", 10)
             set $indirectCallSlotInstAddr = $indirectCallAddr + 182
           else
-            print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", or "interlock"; got $arg0 !!!!!!!!!!'
-            error
+            if !(int)strncmp($arg0, "sfi_full", 10)
+              set $indirectCallSlotInstAddr = $indirectCallAddr + 129
+            else
+              if !(int)strncmp($arg0, "sfi_aslr", 10)
+                set $indirectCallSlotInstAddr = $indirectCallAddr + 98
+              else
+                print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", or "sfi_aslr"; got $arg0 !!!!!!!!!!'
+                error
+              end
+            end
           end
         end
       end
@@ -222,8 +238,18 @@ else
             set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
             set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
           else
-            print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", or "interlock"; got $arg0 !!!!!!!!!!'
-            error
+            if !(int)strncmp($arg0, "sfi_full", 10)
+              set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
+              set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
+            else
+              if !(int)strncmp($arg0, "sfi_aslr", 10)
+                set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
+                set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
+              else
+                print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", "blade", "phttobtb", "interlock", "sfi_full", or "sfi_aslr"; got $arg0 !!!!!!!!!!'
+                error
+              end
+            end
           end
         end
       end
