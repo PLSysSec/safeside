@@ -58,9 +58,26 @@ define pointsToShlRcx4
   end
 end
 
+# set everything up as needed. the rest of the file is the body of this function.
+# expects an argument -- currently supports "stock" and "strawman"
+define initialize
+if $argc != 1
+  print "initialize expects exactly one argument"
+  error
+end
+
 # wait for instruction that computes the address of the indirect function table length object
 set $indirectCallAddr = (char*) &'guest_func__Z12callIndirectPPFciEPb'
-set $indirectCallLenInstAddr = $indirectCallAddr + 56
+if !(int)strncmp($arg0, "stock", 8)
+  set $indirectCallLenInstAddr = $indirectCallAddr + 56
+else
+  if !(int)strncmp($arg0, "strawman", 8)
+    set $indirectCallLenInstAddr = $indirectCallAddr + 68
+  else
+    print '!!!!!!!! Expected argument to be either "stock" or "strawman"; got $arg0 !!!!!!!!!!'
+    error
+  end
+end
 pointsToMovRdxRdx8 $indirectCallLenInstAddr
 if $ret
   tb *$indirectCallLenInstAddr + 1
@@ -77,7 +94,16 @@ set $indirectCallLenAddr = (uint64_t)$rdx + 0x8
 ## p *($indirectCallAddr + 67)=0x90
 
 # wait for instruction that computes the indirect function table rows
-set $indirectCallSlotInstAddr = $indirectCallAddr + 74
+if !(int)strncmp($arg0, "stock", 8)
+  set $indirectCallSlotInstAddr = $indirectCallAddr + 74
+else
+  if !(int)strncmp($arg0, "strawman", 8)
+    set $indirectCallSlotInstAddr = $indirectCallAddr + 95
+  else
+    print '!!!!!!!! Expected argument to be either "stock" or "strawman"; got $arg0 !!!!!!!!!!'
+    error
+  end
+end
 pointsToShlRcx4 $indirectCallSlotInstAddr
 if $ret
   tb *$indirectCallSlotInstAddr + 1
@@ -91,11 +117,19 @@ continue
 set $target =  $rdx + (((uint64_t)0x0001000) << 4)
 set $page = $target & 0xfffffffffffff000
 set $mappedslot = (char*) mmap($page, 4096,  0x1 | 0x2 | 0x4, 0x20 | 0x02 | 0x10, -1, 0)
+if $mappedslot == -1
+  print "!!!!!!!! Error in mmap($page) !!!!!!!!!"
+  error
+end
 print *(uint64_t*) $target = 2
 set $func_loc = 0x15678000
 print *(uint64_t*) ($target+8) = $func_loc
 
 set $mapped = (char*) mmap($func_loc, 4096,  0x1 | 0x2 | 0x4, 0x20 | 0x02 | 0x10, -1, 0)
+if $mapped == -1
+  print "!!!!!!!! Error in mmap($func_loc) !!!!!!!!!"
+  error
+end
 
 print *($func_loc + 0)  = 0xb8
 print *($func_loc + 1)  = 0x65
@@ -133,21 +167,31 @@ print *($func_loc + 31) = 0xc3
 # patch the clflush of host tables
 # sanity check
 set $trainleakaddr = (char*) &'guest_func__Z29flush_function_table_len_addrv'
-set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
-set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
+if !(int)strncmp($arg0, "stock", 8)
+  set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
+  set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
+else
+  if !(int)strncmp($arg0, "strawman", 8)
+    set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 7 + 2)
+    set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 17 + 2)
+  else
+    print '!!!!!!!! Expected argument to be either "stock" or "strawman"; got $arg0 !!!!!!!!!!'
+    error
+  end
+end
 
 if *$trainleakaddr1 == 0x1234567890abcde
-print *$trainleakaddr1 = $indirectCallLenAddr
+  print *$trainleakaddr1 = $indirectCallLenAddr
 else
-print "!!!!!!! Error patching trainleakaddr1!!!!!!!"
-error
+  print "!!!!!!! Error patching trainleakaddr1!!!!!!!"
+  error
 end
 
 if *$trainleakaddr2 == 0x1234567890abce6
-print *$trainleakaddr2 = $indirectCallLenAddr + 8
+  print *$trainleakaddr2 = $indirectCallLenAddr + 8
 else
-print "!!!!!!! Error patching trainleakaddr2!!!!!!!"
-error
+  print "!!!!!!! Error patching trainleakaddr2!!!!!!!"
+  error
 end
 
-#c
+#end #define initialize

@@ -77,6 +77,7 @@ elif [[ $1 == "breakout" ]]; then
   -ex "b guest_func___original_main" \
   -ex "r" \
   -x breakout.gdbcommands \
+  -ex 'initialize "'$2'"' \
   --args $LUCET_WASI $LUCET_WASI_ARGS ./build/$2/$SO
 
 else
