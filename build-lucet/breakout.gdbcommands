@@ -14,24 +14,78 @@
 
 set pagination off
 
-set $indirectCallAddr = (char*) &'guest_func__Z12callIndirectPPFciEPb'
+# does a given address point to a "mov rdx, QWORD PTR [rdx+8]" instruction
+# output in the $ret variable
+define pointsToMovRdxRdx8
+  if *((unsigned char*)($arg0)) != 0x48
+    set $ret = 0
+  else
+    if *((unsigned char*)($arg0) + 1) != 0x8B
+      set $ret = 0
+    else
+      if *((unsigned char*)($arg0) + 2) != 0x52
+        set $ret = 0
+      else
+        if *((unsigned char*)($arg0) + 3) != 0x08
+          set $ret = 0
+        else
+          set $ret = 1
+        end
+      end
+    end
+  end
+end
+
+# does a given address point to a "shl rcx, 4" instruction
+# output in the $ret variable
+define pointsToShlRcx4
+  if *((unsigned char*)($arg0)) != 0x48
+    set $ret = 0
+  else
+    if *((unsigned char*)($arg0) + 1) != 0xC1
+      set $ret = 0
+    else
+      if *((unsigned char*)($arg0) + 2) != 0xE1
+        set $ret = 0
+      else
+        if *((unsigned char*)($arg0) + 3) != 0x04
+          set $ret = 0
+        else
+          set $ret = 1
+        end
+      end
+    end
+  end
+end
 
 # wait for instruction that computes the address of the indirect function table length object
-set $indirectCallLenInstAddr = $indirectCallAddr + 57
-tb *$indirectCallLenInstAddr
-c
+set $indirectCallAddr = (char*) &'guest_func__Z12callIndirectPPFciEPb'
+set $indirectCallLenInstAddr = $indirectCallAddr + 56
+pointsToMovRdxRdx8 $indirectCallLenInstAddr
+if $ret
+  tb *$indirectCallLenInstAddr + 1
+else
+  print "!!!!!!!! Error setting breakpoint on indirectCallLenInstAddr !!!!!!!!!!"
+  error
+end
+continue
+# Now save the table length object address
+set $indirectCallLenAddr = (uint64_t)$rdx + 0x8
 
 ## Hack --- disable bounds check for testing
 ## p *($indirectCallAddr + 66)=0x90
 ## p *($indirectCallAddr + 67)=0x90
 
-# Save the table length object address
-set $indirectCallLenAddr = (uint64_t)$rdx + 0x8
-
 # wait for instruction that computes the indirect function table rows
-set $indirectCallSlotInstAddr = $indirectCallAddr + 75
-tb *$indirectCallSlotInstAddr
-c
+set $indirectCallSlotInstAddr = $indirectCallAddr + 74
+pointsToShlRcx4 $indirectCallSlotInstAddr
+if $ret
+  tb *$indirectCallSlotInstAddr + 1
+else
+  print "!!!!!!!! Error setting breakpoint on indirectCallSlotInstAddr !!!!!!!!!!"
+  error
+end
+continue
 
 # patch in this function at the expected OOB target
 set $target =  $rdx + (((uint64_t)0x0001000) << 4)
@@ -82,15 +136,18 @@ set $trainleakaddr = (char*) &'guest_func__Z29flush_function_table_len_addrv'
 set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
 set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
 
-if *$trainleakaddr1 != 0x1234567890abcde
-print "!!!!!!! Error performing patch 1!!!!!!!"
-end
-
+if *$trainleakaddr1 == 0x1234567890abcde
 print *$trainleakaddr1 = $indirectCallLenAddr
-
-if *$trainleakaddr2 != 0x1234567890abce6
-print "!!!!!!! Error performing patch 2!!!!!!!"
+else
+print "!!!!!!! Error patching trainleakaddr1!!!!!!!"
+error
 end
 
+if *$trainleakaddr2 == 0x1234567890abce6
 print *$trainleakaddr2 = $indirectCallLenAddr + 8
-c
+else
+print "!!!!!!! Error patching trainleakaddr2!!!!!!!"
+error
+end
+
+#c
