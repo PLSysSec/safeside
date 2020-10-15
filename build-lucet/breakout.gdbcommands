@@ -77,8 +77,12 @@ else
     if !(int)strncmp($arg0, "loadlfence", 10)
       set $indirectCallLenInstAddr = $indirectCallAddr + 74
     else
-      print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", or "strawman"; got $arg0 !!!!!!!!!!'
-      error
+      if !(int)strncmp($arg0, "blade", 10)
+        set $indirectCallLenInstAddr = $indirectCallAddr + 62
+      else
+        print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", or "blade"; got $arg0 !!!!!!!!!!'
+        error
+      end
     end
   end
 end
@@ -107,8 +111,12 @@ else
     if !(int)strncmp($arg0, "loadlfence", 10)
       set $indirectCallSlotInstAddr = $indirectCallAddr + 95
     else
-      print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", or "strawman"; got $arg0 !!!!!!!!!!'
-      error
+      if !(int)strncmp($arg0, "blade", 10)
+        set $indirectCallSlotInstAddr = $indirectCallAddr + 83
+      else
+        print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", or "blade"; got $arg0 !!!!!!!!!!'
+        error
+      end
     end
   end
 end
@@ -186,8 +194,13 @@ else
       set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
       set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
     else
-      print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", or "strawman"; got $arg0 !!!!!!!!!!'
-      error
+      if !(int)strncmp($arg0, "blade", 10)
+        set $trainleakaddr1 = (uint64_t*)($trainleakaddr + 4 + 2)
+        set $trainleakaddr2 = (uint64_t*)($trainleakaddr + 14 + 2)
+      else
+        print '!!!!!!!! Expected argument to be one of "stock", "loadlfence", "strawman", or "blade"; got $arg0 !!!!!!!!!!'
+        error
+      end
     end
   end
 end
