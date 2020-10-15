@@ -31,38 +31,162 @@ set(CMAKE_CXX_FLAGS
 set(CMAKE_C_LINK_FLAGS "")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all")
 
+set(LUCETC_FLAGS
+  "--bindings" "${WASI_BINDINGS_JSON}"
+  "--guard-size" "4GiB"
+  "--min-reserved-size" "4GiB"
+  "--max-reserved-size" "4GiB"
+  "--pinned-heap-reg")
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(DYLIB_EXT "dylib")
 else()
   set(DYLIB_EXT "so")
 endif()
 
-set(TARGETS spectre_v1_pht_sa ret2spec_sa)
-set(TARGETS_SO spectre_v1_pht_sa.${DYLIB_EXT} ret2spec_sa.${DYLIB_EXT}) # I can't figure out how to automate this in CMake
+set(COMMON_SRCS
+  ${safeside_SOURCE_DIR}/demos/cache_sidechannel.cc
+  ${safeside_SOURCE_DIR}/demos/instr.cc
+  ${safeside_SOURCE_DIR}/demos/timing_array.cc
+  ${safeside_SOURCE_DIR}/demos/utils.cc
+  #${safeside_SOURCE_DIR}/demos/faults.cc
+  ${safeside_SOURCE_DIR}/demos/asm/measurereadlatency_wasm.c
+  ${safeside_SOURCE_DIR}/demos/ret2spec_common.cc
+)
+
+set(TARGETS
+  spectre_v1_pht_sa
+  ret2spec_sa
+)
+set(TARGETS_SO  # I can't figure out how to automate this in CMake
+  stock/spectre_v1_pht_sa.${DYLIB_EXT}
+  loadlfence/spectre_v1_pht_sa.${DYLIB_EXT}
+  strawman/spectre_v1_pht_sa.${DYLIB_EXT}
+  sfi_full/spectre_v1_pht_sa.${DYLIB_EXT}
+  cet_full/spectre_v1_pht_sa.${DYLIB_EXT}
+  sfi_aslr/spectre_v1_pht_sa.${DYLIB_EXT}
+  cet_aslr/spectre_v1_pht_sa.${DYLIB_EXT}
+  cet_only/spectre_v1_pht_sa.${DYLIB_EXT}
+  blade/spectre_v1_pht_sa.${DYLIB_EXT}
+  phttobtb/spectre_v1_pht_sa.${DYLIB_EXT}
+  interlock/spectre_v1_pht_sa.${DYLIB_EXT}
+
+  stock/ret2spec_sa.${DYLIB_EXT}
+  loadlfence/ret2spec_sa.${DYLIB_EXT}
+  strawman/ret2spec_sa.${DYLIB_EXT}
+  sfi_full/ret2spec_sa.${DYLIB_EXT}
+  cet_full/ret2spec_sa.${DYLIB_EXT}
+  sfi_aslr/ret2spec_sa.${DYLIB_EXT}
+  cet_aslr/ret2spec_sa.${DYLIB_EXT}
+  cet_only/ret2spec_sa.${DYLIB_EXT}
+  blade/ret2spec_sa.${DYLIB_EXT}
+  phttobtb/ret2spec_sa.${DYLIB_EXT}
+  interlock/ret2spec_sa.${DYLIB_EXT}
+)
 
 FOREACH(TARGET ${TARGETS})
 
   add_executable(${TARGET}.wasm
-    ${safeside_SOURCE_DIR}/demos/cache_sidechannel.cc
-    ${safeside_SOURCE_DIR}/demos/instr.cc
-    ${safeside_SOURCE_DIR}/demos/timing_array.cc
-    ${safeside_SOURCE_DIR}/demos/utils.cc
-    #${safeside_SOURCE_DIR}/demos/faults.cc
-    ${safeside_SOURCE_DIR}/demos/asm/measurereadlatency_wasm.c
-    ${safeside_SOURCE_DIR}/demos/ret2spec_common.cc
+    ${COMMON_SRCS}
     ${safeside_SOURCE_DIR}/demos/${TARGET}.cc)
 
-  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${TARGET}.${DYLIB_EXT}
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/stock/${TARGET}.${DYLIB_EXT}
                      DEPENDS ${TARGET}.wasm
                      COMMAND ${LUCETC}
-                             --bindings ${WASI_BINDINGS_JSON}
-                             --guard-size "4GiB"
-                             --min-reserved-size "4GiB"
-                             --max-reserved-size "4GiB"
-                             --pinned-heap-reg
+                             ${LUCETC_FLAGS}
                              ${TARGET}.wasm
-                             -o ${CMAKE_BINARY_DIR}/${TARGET}.${DYLIB_EXT}
-                     COMMENT "Compiling wasm file to native")
+                             -o ${CMAKE_BINARY_DIR}/stock/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with stock protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/loadlfence/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-mitigation=loadlfence
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/loadlfence/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with loadlfence protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/strawman/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-mitigation=strawman
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/strawman/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with strawman protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/sfi_full/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-mitigation=sfi
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/sfi_full/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with sfi_full protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cet_full/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-mitigation=cet
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/cet_full/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with cet_full protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/sfi_aslr/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-mitigation=sfiaslr
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/sfi_aslr/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with sfi_aslr protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cet_aslr/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-mitigation=cetaslr
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/cet_aslr/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with cet_aslr protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cet_only/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-mitigation=cetonly
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/cet_only/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with cet_only protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/blade/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-pht-mitigation=blade
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/blade/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with blade protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/phttobtb/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-pht-mitigation=phttobtb
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/phttobtb/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with phttobtb protections")
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/interlock/${TARGET}.${DYLIB_EXT}
+                     DEPENDS ${TARGET}.wasm
+                     COMMAND ${LUCETC}
+                             ${LUCETC_FLAGS}
+                             --spectre-pht-mitigation=interlock
+                             ${TARGET}.wasm
+                             -o ${CMAKE_BINARY_DIR}/interlock/${TARGET}.${DYLIB_EXT}
+                     COMMENT "Compiling wasm file to native with interlock protections")
 
 ENDFOREACH(TARGET)
 
