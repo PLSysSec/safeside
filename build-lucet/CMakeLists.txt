@@ -15,6 +15,8 @@ set(WASI_SYSROOT_DIR ${WASI_SDK_DIR}/share/wasi-sysroot)
 set(WASICLANG ${WASI_SDK_DIR}/bin/clang)
 set(WASICLANG++ ${WASI_SDK_DIR}/bin/clang++)
 set(LUCETC ${LUCET_DIR}/target/release/lucetc)
+# just define this as LUCETC if you don't need to build "real" CET binaries
+set(CET_LUCETC ${LUCET_DIR}/target-cet/release/lucetc)
 set(WASI_BINDINGS_JSON ${safeside_SOURCE_DIR}/build-lucet/bindings.json)
 set(NATIVE_CLANG++ /usr/bin/clang++)
 
@@ -127,7 +129,7 @@ FOREACH(TARGET ${TARGETS})
 
   add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cet_full/${TARGET}.${DYLIB_EXT}
                      DEPENDS ${TARGET}.wasm
-                     COMMAND ${LUCETC}
+                     COMMAND ${CET_LUCETC}
                              ${LUCETC_FLAGS}
                              --spectre-mitigation=cet
                              ${TARGET}.wasm
@@ -145,7 +147,7 @@ FOREACH(TARGET ${TARGETS})
 
   add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cet_aslr/${TARGET}.${DYLIB_EXT}
                      DEPENDS ${TARGET}.wasm
-                     COMMAND ${LUCETC}
+                     COMMAND ${CET_LUCETC}
                              ${LUCETC_FLAGS}
                              --spectre-mitigation=cetaslr
                              ${TARGET}.wasm
@@ -154,7 +156,7 @@ FOREACH(TARGET ${TARGETS})
 
   add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cet_only/${TARGET}.${DYLIB_EXT}
                      DEPENDS ${TARGET}.wasm
-                     COMMAND ${LUCETC}
+                     COMMAND ${CET_LUCETC}
                              ${LUCETC_FLAGS}
                              --spectre-mitigation=cetonly
                              ${TARGET}.wasm
